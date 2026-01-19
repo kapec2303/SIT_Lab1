@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 
 
-# Паттерн абстрактной фабрики
-
+# Абстрактная фабрика
 # интерфейс для создания семейств взаимосвязанных или взаимозависимых объектов,
 # не специфицируя их конкретных классов.
 # Шаблон реализуется созданием абстрактного класса Factory,
 # который представляет собой интерфейс для создания компонентов системы
+
 class UIFactory(ABC):
     @abstractmethod
     def create_button(self, name: str):
@@ -16,7 +16,6 @@ class UIFactory(ABC):
     def create_checkbox(self, name: str):
         pass
 
-# Сами фабрики
 
 class WindowsFactory(UIFactory):
     def create_button(self, name: str):
@@ -33,55 +32,57 @@ class MacFactory(UIFactory):
     def create_checkbox(self, name: str):
         return MacCheckbox(name)
 
-# Абстрактные продукты
+
+# Паттерн Компоновщик
+# Объединяет объекты в древовидную структуру для представления иерархии от частного к целому.
+# Компоновщик позволяет клиентам обращаться к отдельным объектам и к группам объектов одинаково.
 
 class UIComponent(ABC):
-
     def __init__(self, name: str):
         self.name = name
+
+    def add(self, component: "UIComponent"):
+        raise NotImplementedError("Нельзя добавить в лист")
+
+    def remove(self, component: "UIComponent"):
+        raise NotImplementedError("Нельзя удалить из листа")
 
     @abstractmethod
     def render(self, indent=0):
         pass
 
-# Сами продукты
 
+# Листья
 class Button(UIComponent):
-    """Абстрактная кнопка."""
     pass
 
 
 class Checkbox(UIComponent):
-    """Абстрактный чекбокс."""
     pass
 
 
 class WindowsButton(Button):
     def render(self, indent=0):
-        print(" " * indent + f" WindowsButton: {self.name}")
+        print(" " * indent + f"WindowsButton: {self.name}")
 
 
 class MacButton(Button):
     def render(self, indent=0):
-        print(" " * indent + f" MacButton: {self.name}")
+        print(" " * indent + f"MacButton: {self.name}")
 
 
 class WindowsCheckbox(Checkbox):
     def render(self, indent=0):
-        print(" " * indent + f" WindowsCheckbox: {self.name}")
+        print(" " * indent + f"WindowsCheckbox: {self.name}")
 
 
 class MacCheckbox(Checkbox):
     def render(self, indent=0):
-        print(" " * indent + f" MacCheckbox: {self.name}")
+        print(" " * indent + f"MacCheckbox: {self.name}")
 
 
-# Паттерн Компоновщик
-
-# Объединяет объекты в древовидную структуру для представления иерархии от частного к целому.
-# Компоновщик позволяет клиентам обращаться к отдельным объектам и к группам объектов одинаково.
+# Контейнер
 class UIContainer(UIComponent):
-
     def __init__(self, name: str):
         super().__init__(name)
         self.children = []
@@ -89,12 +90,17 @@ class UIContainer(UIComponent):
     def add(self, component: UIComponent):
         self.children.append(component)
 
+    def remove(self, component: UIComponent):
+        self.children.remove(component)
+
     def render(self, indent=0):
-        print(" " * indent + f" Контейнер: {self.name}")
+        print(" " * indent + f"Container: {self.name}")
         for child in self.children:
             child.render(indent + 4)
 
-# Менюшка
+
+# Клиент
+
 def create_ui(factory: UIFactory):
     root = UIContainer("Главное окно")
 
@@ -106,13 +112,15 @@ def create_ui(factory: UIFactory):
     settings_panel.add(factory.create_button("Сохранить"))
 
     root.add(settings_panel)
+
     return root
 
+
 if __name__ == "__main__":
-    print("!!! Интерфейс для Windows !!!")
+    print("=== Windows UI ===")
     windows_ui = create_ui(WindowsFactory())
     windows_ui.render()
 
-    print("!!! Интерфейс для Mac !!!")
+    print("\n=== Mac UI ===")
     mac_ui = create_ui(MacFactory())
     mac_ui.render()
